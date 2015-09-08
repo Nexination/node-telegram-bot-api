@@ -24,3 +24,5 @@ telegram.on('default', defaultCall);  // This one is unique to this library as t
 ```
 
 Link to telegram messenger bot API reference: https://core.telegram.org/bots/api
+
+Currently this code only supports polling telegram messenger for bot messages, but now that telegram messenger API supports self signed certificates, this will be implemented.
