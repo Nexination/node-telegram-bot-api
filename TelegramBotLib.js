@@ -1,4 +1,4 @@
-﻿var TelegramBotLib = function(settings) {
+var TelegramBotLib = function(settings) {
     var https = require('https');
     var main = this;
     this.data = {
