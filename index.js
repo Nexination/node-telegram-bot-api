@@ -1,6 +1,8 @@
 var TelegramBotLib = function(settings) {
     var https = require('https');
+    var fs = require('fs');
     var main = this;
+    
     this.data = {
         "updateCount": 0
         , "users": {
@@ -15,12 +17,7 @@ var TelegramBotLib = function(settings) {
         }
     };
     this.functionReferenceStore = {};
-    /**
-     *  Creates the bot API url from the given bot authentication token and
-     *  initiates the time out interval for watching updates
-     *  
-     *  @param {string} botToken - Bot authentication token
-     */
+    
     this.__construct = function() {
         main.options.baseUrl += settings.botToken + '/';
         
@@ -29,20 +26,14 @@ var TelegramBotLib = function(settings) {
         
         return false;
     };
-    /**
-     *  A dumb watcher, that is just a place holder for an interval
-     */
+    this.buildMultipartForm = function() {
+        
+    };
     this.watchUpdates = function() {
         main.apiCall('getUpdates', {"offset": main.data.updateCount});
         
         return false;
     };
-    /**
-     *  Replaces place holders in API calls, to then execute a call to the API
-     *  
-     *  @param {string} call - The API call to use
-     *  @param {Object} data - An object with place holder values, like {"offset": 15}
-     */
     this.apiCall = function(call, data) {
         var apiCalls = this.options.apiCalls;
         var apiToCall = '';
@@ -69,12 +60,6 @@ var TelegramBotLib = function(settings) {
         };
         return false;
     };
-    /**
-     *  API return data, that is invoked by the https.get asynchronously,
-     *  which is then passed to an appropriate function
-     *  
-     *  @param {Object} resource - The resource object returned from https.get
-     */
     this.apiReturn = function(resource) {
         var dataCount = 0;
         var fullData = '';
