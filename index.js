@@ -91,7 +91,6 @@ var TelegramBotLib = function(settings) {
                             let functionCall = result.message.text;
                             functionCall = (functionCall.indexOf('/') === 0 ? functionCall.substr(1) : '');
                             functionCall = (functionCall.indexOf('@') >= 0 ? functionCall.substr(0, functionCall.indexOf('@')) : '');
-                            console.log(main.functionReferenceStore[functionCall]);
                             
                             // Stores the next update_id
                             if(main.data.updateCount <= result.update_id) {
