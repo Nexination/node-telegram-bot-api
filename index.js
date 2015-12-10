@@ -1,3 +1,4 @@
+"use strict";
 var TelegramBotLib = function(settings) {
     var https = require('https');
     var fs = require('fs');
@@ -87,8 +88,10 @@ var TelegramBotLib = function(settings) {
                         // Log all results
                         console.log(result.message.chat.id, result.message.text);
                         if(result.message.text !== undefined) {
-                            var functionCall = result.message.text.match(/\/\S+/gim);
-                            functionCall = (functionCall !== null ? functionCall[0].substr(1) : '');
+                            let functionCall = result.message.text;
+                            functionCall = (functionCall.indexOf('/') === 0 ? functionCall.substr(1) : '');
+                            functionCall = (functionCall.indexOf('@') >= 0 ? functionCall.substr(0, functionCall.indexOf('@')) : '');
+                            console.log(main.functionReferenceStore[functionCall]);
                             
                             // Stores the next update_id
                             if(main.data.updateCount <= result.update_id) {
