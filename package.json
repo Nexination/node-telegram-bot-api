@@ -1,5 +1,5 @@
 {
-  "name": "telegram-bot-api",
+  "name": "nexi-telegram-bot-api",
   "version": "1.0.0",
   "description": "Easily make bots for Telegram messenger with this API.",
   "main": "index.js",
