@@ -1,9 +1,10 @@
 {
-  "name": "nexi-telegram-bot-api",
+  "name": "telegram-bot-manager",
   "version": "1.0.0",
-  "description": "Easily make bots for Telegram messenger with this API.",
-  "main": "index.js",
+  "description": "Easily build and manage bots for Telegram messenger.",
+  "main": "server.js",
   "scripts": {
+    "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
