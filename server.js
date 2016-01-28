@@ -2,12 +2,11 @@
 /*let BotApi = new (require('./lib/telegrambotapi').BotApi)({"botToken": "1122"});
 let BotManager = new (require('./lib/telegrambotmanager').BotManager)({"botToken": "1122"});*/
 //mainlet botData = {};
-let main = {};
+//let main = {};
 
 class BotManager {
-  var main = {};
   constructor(settings) {
-    main = this;
+    //main = this;
     this.data = {
       "updateCount": 0
       , "users": {
@@ -25,19 +24,19 @@ class BotManager {
     this.https = require('https');
 
     this.options.baseUrl += settings.botToken + '/';
-    setInterval(this.watchUpdates, main.options.updateTime);
+    setInterval(() => {this.watchUpdates();}, this.options.updateTime);
     this.watchUpdates();
 
     return false;
   }
   watchUpdates() {
     console.log('garble');
-    main.apiCall('getUpdates', {"offset": main.data.updateCount});
+    this.apiCall('getUpdates', {"offset": this.data.updateCount});
 
     return false;
   }
   apiCall(call, data) {
-    let apiCalls = main.options.apiCalls;
+    let apiCalls = this.options.apiCalls;
     let apiToCall = '';
     if(apiCalls.hasOwnProperty(call)) {
       // Replace placeholder with values from data object
@@ -56,7 +55,7 @@ class BotManager {
       );
 
       // Call the API
-      this.https.get(main.options.baseUrl + apiToCall, this.apiReturn).on('error', function(e) {
+      this.https.get(this.options.baseUrl + apiToCall, this.apiReturn).on('error', function(e) {
         console.error(e);
       });
     };
@@ -94,23 +93,23 @@ class BotManager {
               functionCall = (functionCall.indexOf('@') >= 0 ? functionCall.substr(0, functionCall.indexOf('@')) : functionCall);
 
               // Stores the next update_id
-              if(main.data.updateCount <= result.update_id) {
-                main.data.updateCount = result.update_id + 1;
+              if(this.data.updateCount <= result.update_id) {
+                this.data.updateCount = result.update_id + 1;
               }
               // Stores individual chats
-              if(result.hasOwnProperty('message') && !main.data.users.hasOwnProperty(result.message.chat.id)) {
-                main.data.users[result.message.chat.id] = { "name": result.message.chat.username};
+              if(result.hasOwnProperty('message') && !this.data.users.hasOwnProperty(result.message.chat.id)) {
+                this.data.users[result.message.chat.id] = { "name": result.message.chat.username};
               };
               // Executes custom function, if found
-              if(main.functionReferenceStore.hasOwnProperty(functionCall)) {
-                main.functionReferenceStore[functionCall](result);
+              if(this.functionReferenceStore.hasOwnProperty(functionCall)) {
+                this.functionReferenceStore[functionCall](result);
               }
-              else if(main.data.users[result.message.chat.id].hasOwnProperty('deferredAction')) {
-                main.data.users[result.message.chat.id]['deferredAction'](result);
-                delete main.data.users[result.message.chat.id]['deferredAction'];
+              else if(this.data.users[result.message.chat.id].hasOwnProperty('deferredAction')) {
+                this.data.users[result.message.chat.id]['deferredAction'](result);
+                delete this.data.users[result.message.chat.id]['deferredAction'];
               }
-              else if(main.functionReferenceStore.hasOwnProperty('default')) {
-                main.functionReferenceStore['default'](result);
+              else if(this.functionReferenceStore.hasOwnProperty('default')) {
+                this.functionReferenceStore['default'](result);
               };
             };
           };
@@ -120,19 +119,19 @@ class BotManager {
     return false;
   }
   on(functionName, functionReference) {
-    main.functionReferenceStore[functionName] = functionReference;
+    this.functionReferenceStore[functionName] = functionReference;
 
     return false;
   }
   deferAction(chatId, action) {
     if(typeof(chatId) === 'number' && typeof(action) === 'function') {
-      main.data.users[chatId]['deferredAction'] = action;
+      this.data.users[chatId]['deferredAction'] = action;
     };
     return false;
   }
   deferActionRemove(chatId) {
     if(typeof(chatId) === 'number') {
-      delete main.data.users[chatId]['deferredAction'];
+      delete this.data.users[chatId]['deferredAction'];
     };
     return false;
   }
