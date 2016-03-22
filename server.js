@@ -20,6 +20,7 @@ class BotManager {
         , "getUpdates": "getUpdates?offset=${offset}"
       }
     };
+    this.functionReferenceStore = {};
 
     this.https = require('https');
 
@@ -30,7 +31,7 @@ class BotManager {
     return false;
   }
   watchUpdates() {
-    console.log('garble');
+    console.log('Checked for updates.');
     this.apiCall('getUpdates', {"offset": this.data.updateCount});
 
     return false;
@@ -55,13 +56,15 @@ class BotManager {
       );
 
       // Call the API
-      this.https.get(this.options.baseUrl + apiToCall, this.apiReturn).on('error', function(e) {
+      this.https.get(this.options.baseUrl + apiToCall, (resource) => {this.apiReturn(resource);}).on('error', function(e) {
         console.error(e);
       });
     };
     return false;
   }
   apiReturn(resource) {
+    console.log(this.data);
+    let main = this;
     let dataCount = 0;
     let fullData = '';
     let dataLength = parseInt(resource.headers['content-length']);
@@ -93,23 +96,23 @@ class BotManager {
               functionCall = (functionCall.indexOf('@') >= 0 ? functionCall.substr(0, functionCall.indexOf('@')) : functionCall);
 
               // Stores the next update_id
-              if(this.data.updateCount <= result.update_id) {
-                this.data.updateCount = result.update_id + 1;
+              if(main.data.updateCount <= result.update_id) {
+                main.data.updateCount = result.update_id + 1;
               }
               // Stores individual chats
-              if(result.hasOwnProperty('message') && !this.data.users.hasOwnProperty(result.message.chat.id)) {
-                this.data.users[result.message.chat.id] = { "name": result.message.chat.username};
+              if(result.hasOwnProperty('message') && !main.data.users.hasOwnProperty(result.message.chat.id)) {
+                main.data.users[result.message.chat.id] = { "name": result.message.chat.username};
               };
               // Executes custom function, if found
-              if(this.functionReferenceStore.hasOwnProperty(functionCall)) {
-                this.functionReferenceStore[functionCall](result);
+              if(main.functionReferenceStore.hasOwnProperty(functionCall)) {
+                main.functionReferenceStore[functionCall](result);
               }
-              else if(this.data.users[result.message.chat.id].hasOwnProperty('deferredAction')) {
-                this.data.users[result.message.chat.id]['deferredAction'](result);
-                delete this.data.users[result.message.chat.id]['deferredAction'];
+              else if(main.data.users[result.message.chat.id].hasOwnProperty('deferredAction')) {
+                main.data.users[result.message.chat.id]['deferredAction'](result);
+                delete main.data.users[result.message.chat.id]['deferredAction'];
               }
-              else if(this.functionReferenceStore.hasOwnProperty('default')) {
-                this.functionReferenceStore['default'](result);
+              else if(main.functionReferenceStore.hasOwnProperty('default')) {
+                main.functionReferenceStore['default'](result);
               };
             };
           };
