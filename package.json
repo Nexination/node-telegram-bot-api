@@ -1,6 +1,6 @@
 {
   "name": "telegram-bot-manager",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Easily build and manage bots for Telegram messenger.",
   "main": "server.js",
   "scripts": {
