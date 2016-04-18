@@ -12,6 +12,35 @@ class BotManager {
       }
     };
     
+    this.telegramEnvelope = {
+      "update_id": 709352500,
+      "message": {
+        "message_id": 54,
+        "from": {
+          "id": 90385038,
+          "first_name": "Kris",
+          "last_name": "Zane",
+          "username": "KrisZane"
+        },
+        "chat": {
+          "id": 90385038,
+          "first_name": "Kris",
+          "last_name": "Zane",
+          "username": "KrisZane",
+          "type": "private"
+        },
+        "date": 1460642885,
+        "text": "/settings",
+        "entities": [
+          {
+            "type": "bot_command",
+            "offset": 0,
+            "length": 9
+          }
+        ]
+      }
+    };
+    
     this.options = {
       "baseUrl": "https://api.telegram.org/bot" + settings.botToken + '/'
       , "updateTime": 3000
@@ -36,23 +65,17 @@ class BotManager {
       this.registerServer();
     }
     else {
+      console.log('Polling mode.');
       setInterval(() => {this.watchUpdates();}, this.options.updateTime);
     };
     
     return false;
   }
   createServer() {
-    this.lib.https.createServer(this.options, (req, res) => {
-      let data = '';
-      req.on('data', (chunk) => {
-        data += chunk;
-      });
-      req.on('end', () => {
-        console.log('recieved:');
-        console.log(data);
-        res.writeHead(200);
-        res.end("hello world\n");
-      });
+    this.lib.https.createServer(this.options, (request, response) => {
+      this.apiReturn(request);
+      response.writeHead(200);
+      response.end("Thank you telegram\n");
     }).listen(8080);
   }
   registerServer() {
@@ -64,9 +87,6 @@ class BotManager {
     multipartRequest.headers['Host'] = 'api.telegram.org';
     multipartRequest.headers['User-Agent'] = 'Node.JS';
     multipartRequest.headers['Accept-Encoding'] = 'gzip,deflate';
-    
-    console.log(multipartRequest.headers);
-    console.log(multipartRequest.body.toString());
     
     let request = this.lib.https.request({
       hostname: 'api.telegram.org',
@@ -85,7 +105,7 @@ class BotManager {
         data += chunk;
       });
       response.on('end', function () {
-        console.log('EndRequest:');
+        console.log('Webhook mode:');
         console.log(data);
       });
     });
@@ -94,8 +114,7 @@ class BotManager {
     request.end();
   }
   watchUpdates() {
-    console.log('Checked for updates.');
-    this.apiCall('getUpdates', {"offset": this.data.updateCount});
+    this.apiCall('getUpdates', {"offset": (this.data.updateCount + 1)});
     
     return false;
   }
@@ -119,70 +138,71 @@ class BotManager {
       );
       
       // Call the API
-      this.lib.https.get(this.options.baseUrl + apiToCall, (resource) => {this.apiReturn(resource);}).on('error', function(e) {
-        console.error(e);
+      this.lib.https.get(this.options.baseUrl + apiToCall, (request) => {this.apiReturn(request);}).on('error', (error) => {
+        console.log(error);
       });
     };
     return false;
   }
-  apiReturn(resource) {
-    console.log(this.data);
-    let main = this;
-    let dataCount = 0;
-    let fullData = '';
-    let dataLength = parseInt(resource.headers['content-length']);
-    
-    resource.on('data', function(data) {
-      if(dataCount !== dataLength) {
-        fullData += data;
-        dataCount += data.length;
+  apiReturn(request) {
+    let data = '';
+    request.on('data', (chunk) => {
+      data += chunk;
+    });
+    request.on('end', () => {
+      let jsonData = {};
+      try {
+        jsonData = JSON.parse(data);
+      }
+      catch(error) {
+        console.log(error);
       };
-      if(dataCount === dataLength) {
-        let jsonData = {};
-        try {
-          jsonData = JSON.parse(fullData);
-        }
-        catch(error) {
-          console.log(error);
-        };
-        
-        // Checks if the API call was a success
-        if(jsonData.hasOwnProperty('ok') && jsonData.ok && jsonData.result.hasOwnProperty('length')) {
-          let resultLength = jsonData.result.length
-          for(let i = 0; i < resultLength; i += 1) {
-            let result = jsonData.result[i];
-            // Log all results
-            console.log(result.message.chat.id, result.message.text);
-            if(result.message.text !== undefined) {
-              let functionCall = result.message.text;
-              functionCall = (functionCall.indexOf('/') === 0 ? functionCall.substr(1) : '');
-              functionCall = (functionCall.indexOf('@') >= 0 ? functionCall.substr(0, functionCall.indexOf('@')) : functionCall);
-              
-              // Stores the next update_id
-              if(main.data.updateCount <= result.update_id) {
-                main.data.updateCount = result.update_id + 1;
-              }
-              // Stores individual chats
-              if(result.hasOwnProperty('message') && !main.data.users.hasOwnProperty(result.message.chat.id)) {
-                main.data.users[result.message.chat.id] = { "name": result.message.chat.username};
-              };
-              // Executes custom function, if found
-              if(main.functionReferenceStore.hasOwnProperty(functionCall)) {
-                main.functionReferenceStore[functionCall](result);
-              }
-              else if(main.data.users[result.message.chat.id].hasOwnProperty('deferredAction')) {
-                main.data.users[result.message.chat.id]['deferredAction'](result);
-                delete main.data.users[result.message.chat.id]['deferredAction'];
-              }
-              else if(main.functionReferenceStore.hasOwnProperty('default')) {
-                main.functionReferenceStore['default'](result);
-              };
-            };
-          };
+      console.log(data);
+      
+      // Check for old or new way
+      let envelope = {};
+      if(jsonData.hasOwnProperty('message')) {
+        envelope = jsonData;
+        this.parseMessage(envelope);
+      }
+      else if(jsonData.hasOwnProperty('result')) {
+        for(let i = 0; i < jsonData.result.length; i += 1) {
+          envelope = jsonData.result[i];
+          this.parseMessage(envelope);
         };
       };
     });
-    return false;
+  }
+  parseMessage(envelope) {
+    let message = envelope.message;
+    this.data.updateCount = envelope.update_id;
+    console.log(message);
+    
+    if(!this.data.users.hasOwnProperty(message.chat.id)) {
+      this.data.users[message.chat.id] = { "name": (message.chat.username || message.chat.title)};
+    };
+    if(message.hasOwnProperty('text')) {
+      // Command
+      if(message.text.substr(0,1) === '/') {
+        let functionCall = message.text;
+        functionCall = (functionCall.indexOf('/') === 0 ? functionCall.substr(1) : '');
+        functionCall = (functionCall.indexOf('@') >= 0 ? functionCall.substr(0, functionCall.indexOf('@')) : functionCall);
+        
+        if(this.functionReferenceStore.hasOwnProperty(functionCall)) {
+          this.functionReferenceStore[functionCall](envelope);
+        };
+      }
+      // Text
+      else if(message.text.trim() !== '') {
+        if(this.data.users[message.chat.id].hasOwnProperty('deferredAction')) {
+          this.data.users[result.message.chat.id]['deferredAction'](envelope);
+          delete this.data.users[message.chat.id]['deferredAction'];
+        }
+        else if(this.functionReferenceStore.hasOwnProperty('default')) {
+          this.functionReferenceStore['default'](envelope);
+        };
+      };
+    };
   }
   on(functionName, functionReference) {
     this.functionReferenceStore[functionName] = functionReference;
