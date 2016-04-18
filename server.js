@@ -4,40 +4,12 @@ class BotManager {
     this.lib = {};
     this.lib.fs = require('fs');
     this.lib.https = require('https');
+    this.lib.http = require('http');
     this.lib.multipartGenerate = new (require('multipart-light').generate);
     
     this.data = {
       "updateCount": 0
       , "users": {
-      }
-    };
-    
-    this.telegramEnvelope = {
-      "update_id": 709352500,
-      "message": {
-        "message_id": 54,
-        "from": {
-          "id": 90385038,
-          "first_name": "Kris",
-          "last_name": "Zane",
-          "username": "KrisZane"
-        },
-        "chat": {
-          "id": 90385038,
-          "first_name": "Kris",
-          "last_name": "Zane",
-          "username": "KrisZane",
-          "type": "private"
-        },
-        "date": 1460642885,
-        "text": "/settings",
-        "entities": [
-          {
-            "type": "bot_command",
-            "offset": 0,
-            "length": 9
-          }
-        ]
       }
     };
     
@@ -51,8 +23,7 @@ class BotManager {
       }
     };
     if(settings.key !== undefined && settings.cert !== undefined) {
-      this.options.key = this.lib.fs.readFileSync(settings.key);
-      this.options.cert = this.lib.fs.readFileSync(settings.cert);
+      
     }
     else {
       settings.type = 'poller';
@@ -61,8 +32,12 @@ class BotManager {
     this.functionReferenceStore = {};
     
     if(settings.type === 'webhook') {
-      this.createServer();
-      this.registerServer();
+      let options = {
+        "key": this.lib.fs.readFileSync(settings.key)
+        , "cert": this.lib.fs.readFileSync(settings.cert)
+      };
+      this.createServer(settings.receiver.protocol, settings.receiver.port, options);
+      this.registerServer(settings.receiver.endpoint, options);
     }
     else {
       console.log('Polling mode.');
@@ -71,17 +46,23 @@ class BotManager {
     
     return false;
   }
-  createServer() {
-    this.lib.https.createServer(this.options, (request, response) => {
-      this.apiReturn(request);
-      response.writeHead(200);
-      response.end("Thank you telegram\n");
-    }).listen(8080);
+  createServer(protocol, port, options) {
+    if(protocol === 'http') {
+      this.lib.http.createServer((request, response) => {this.responseServer(request, response)}).listen(port);
+    }
+    else {
+      this.lib.https.createServer(options, (request, response) => {this.responseServer(request, response)}).listen(port);
+    };
   }
-  registerServer() {
+  responseServer(request, response){
+    this.apiReturn(request);
+    response.writeHead(200);
+    response.end("Thank you telegram\n");
+  }
+  registerServer(endpoint, options) {
     let multipartData = [
-      {"data": "https://botmanager.nexination.com/", "name": "url"}
-      , {"mimeType": "application/x-x509-ca-cert", "data": this.options.cert, "name": "certificate"}
+      {"data": endpoint, "name": "url"}
+      , {"mimeType": "application/x-x509-ca-cert", "data": options.cert, "name": "certificate"}
     ];
     let multipartRequest = this.lib.multipartGenerate.request(multipartData);
     multipartRequest.headers['Host'] = 'api.telegram.org';
