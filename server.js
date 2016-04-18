@@ -195,7 +195,7 @@ class BotManager {
       // Text
       else if(message.text.trim() !== '') {
         if(this.data.users[message.chat.id].hasOwnProperty('deferredAction')) {
-          this.data.users[result.message.chat.id]['deferredAction'](envelope);
+          this.data.users[message.chat.id]['deferredAction'](envelope);
           delete this.data.users[message.chat.id]['deferredAction'];
         }
         else if(this.functionReferenceStore.hasOwnProperty('default')) {
