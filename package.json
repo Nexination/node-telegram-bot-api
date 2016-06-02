@@ -16,6 +16,9 @@
     "bot",
     "api"
   ],
+  "dependencies": {
+    "multipart-light": "https://github.com/Nexination/node-multipart-light.git"
+  },
   "author": "Kristian B",
   "license": "MIT",
   "bugs": {
