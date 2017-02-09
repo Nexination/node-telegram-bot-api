@@ -22,19 +22,22 @@ class BotManager {
         , "setWebhook": "setWebhook"
       }
     };
-    if(settings.key !== undefined && settings.cert !== undefined) {
+    /*if(settings.key !== undefined && settings.cert !== undefined) {
       
     }
     else {
       settings.type = 'poller';
-    };
+    };*/
     
     this.functionReferenceStore = {};
     
     if(settings.type === 'webhook') {
-      let options = {
-        "key": this.lib.fs.readFileSync(settings.key)
-        , "cert": this.lib.fs.readFileSync(settings.cert)
+      let options = {};
+      if(settings.key !== undefined && settings.cert !== undefined) {
+        options = {
+          "key": this.lib.fs.readFileSync(settings.key)
+          , "cert": this.lib.fs.readFileSync(settings.cert)
+        };
       };
       this.createServer(settings.receiver.protocol, settings.receiver.port, options);
       this.registerServer(settings.receiver.endpoint, options);
@@ -50,8 +53,11 @@ class BotManager {
     if(protocol === 'http') {
       this.lib.http.createServer((request, response) => {this.responseServer(request, response)}).listen(port);
     }
-    else {
+    else if(options.key !== undefined && options.cert !== undefined) {
       this.lib.https.createServer(options, (request, response) => {this.responseServer(request, response)}).listen(port);
+    }
+    else {
+      console.log('Listening server failed, consult manual.');
     };
   }
   responseServer(request, response){
@@ -62,8 +68,10 @@ class BotManager {
   registerServer(endpoint, options) {
     let multipartData = [
       {"data": endpoint, "name": "url"}
-      , {"mimeType": "application/x-x509-ca-cert", "data": options.cert, "name": "certificate"}
     ];
+    if(options.key !== undefined && options.cert !== undefined) {
+      multipartData.push({"mimeType": "application/x-x509-ca-cert", "data": options.cert, "name": "certificate"});
+    };
     let multipartRequest = this.lib.multipartGenerate.request(multipartData);
     multipartRequest.headers['Host'] = 'api.telegram.org';
     multipartRequest.headers['User-Agent'] = 'Node.JS';
