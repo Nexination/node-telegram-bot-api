@@ -20,6 +20,8 @@ class BotManager {
         "sendMessage": "sendMessage?chat_id=${chatId}&text=${encodedMessage}"
         , "getUpdates": "getUpdates?offset=${offset}"
         , "setWebhook": "setWebhook"
+        , "deleteWebhook": "deleteWebhook"
+        , "getWebhookInfo": "getWebhookInfo"
       }
     };
     /*if(settings.key !== undefined && settings.cert !== undefined) {

@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/KrisZane/node-telegram-bot-api.git"
+    "url": "git+https://github.com/Nexination/node-telegram-bot-manager.git"
   },
   "keywords": [
     "telegram",
@@ -22,7 +22,7 @@
   "author": "Kristian B",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/KrisZane/node-telegram-bot-api/issues"
+    "url": "https://github.com/Nexination/node-telegram-bot-manager/issues"
   },
-  "homepage": "https://github.com/KrisZane/node-telegram-bot-api#readme"
+  "homepage": "https://github.com/Nexination/node-telegram-bot-manager#readme"
 }
